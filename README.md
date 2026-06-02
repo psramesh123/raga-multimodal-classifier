@@ -22,11 +22,11 @@ A *raga* is the melodic framework of Indian classical music, defined by its set 
 
 ## Methodology (Phase 1)
 
-**Data cleaning.** Filenames encoded raga, emotion, and augmentation, but with real-world inconsistencies: spelling variants (Bowli/Bhauli, Nilambari/Neelambari, dhwijavanthi/Dwijavanthi) and inconsistent flute prefixes (\`F_\`, \`F\`, \`F_flute_\`). An alias-aware parser reached 100% parse coverage across all 613 files.
+**Data cleaning.** Filenames encoded raga, emotion, and augmentation, but with real-world inconsistencies: spelling variants (Bowli/Bhauli, Nilambari/Neelambari, dhwijavanthi/Dwijavanthi) and inconsistent flute prefixes (`F_`, `F`, `F_flute_`). An alias-aware parser reached 100% parse coverage across all 613 files.
 
 **Leakage-safe split.** Because augmented filenames do not preserve their source-recording identity, augmentations cannot be cleanly separated from originals at the recording level. The baseline therefore trains and evaluates on the 165 original recordings only, with a stratified 80/20 split. The 33-file test set was sealed and evaluated exactly once.
 
-**Features.** Per-recording aggregated descriptors via \`librosa\`: 20 MFCCs (timbre), 12-bin chroma (pitch-class / tonal content), and spectral centroid, bandwidth, rolloff, zero-crossing rate, and RMS — mean and standard deviation over time. 69 features total.
+**Features.** Per-recording aggregated descriptors via `librosa`: 20 MFCCs (timbre), 12-bin chroma (pitch-class / tonal content), and spectral centroid, bandwidth, rolloff, zero-crossing rate, and RMS — mean and standard deviation over time. 69 features total.
 
 **Models.** Logistic Regression, Random Forest, and HistGradientBoosting compared via stratified 5-fold cross-validation on the training set, against a chance baseline.
 
@@ -59,13 +59,28 @@ A regularized linear model outperformed the tree ensembles — the expected outc
 - Raw chroma is tonic-dependent; tonic normalization is a planned improvement.
 - Small dataset (165 originals); the deep learning phase will use leakage-safe augmentation performed only on training recordings.
 
+## Repository structure
+
+```
+raga-multimodal-classifier/
+├── data/                      # dataset (git-ignored; download instructions below)
+├── notebooks/
+│   ├── 01_data_inventory.ipynb     # parsing, cleaning, leakage-safe split
+│   └── 02_features_baseline.ipynb  # feature extraction + classical ML baseline
+├── models/
+├── confusion_matrix_baseline.png
+└── README.md
+```
+
 ## How to run
 
-\`\`\`bash
+```bash
 conda create -n raga-project python=3.10 -y
 conda activate raga-project
 conda install -c conda-forge librosa -y
 pip install pandas scikit-learn matplotlib seaborn jupyter
 
-# Download the RaagaDhvani dataset (CC BY-ND 4.0) into data/, then run the notebooks in order.
-\`\`\`
+# Download the RaagaDhvani dataset (CC BY-ND 4.0) into data/, then:
+jupyter notebook
+# run notebooks/01_data_inventory.ipynb, then notebooks/02_features_baseline.ipynb
+```
