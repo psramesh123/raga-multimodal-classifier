@@ -1,0 +1,9 @@
+# Pitch-class only, blocked CV.
+name: chroma_only_blocked
+split: splits/legacy_stratified.json
+features:
+  groups: [chroma]
+model:
+  name: logreg
+eval:
+  cv_strategy: blocked

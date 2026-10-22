@@ -1,0 +1,5 @@
+# Phase 1 comparison model.
+name: hist_gb
+split: splits/legacy_stratified.json
+model:
+  name: hist_gb

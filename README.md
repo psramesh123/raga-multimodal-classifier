@@ -59,17 +59,44 @@ A regularized linear model outperformed the tree ensembles — the expected outc
 - Raw chroma is tonic-dependent; tonic normalization is a planned improvement.
 - Small dataset (165 originals); the deep learning phase will use leakage-safe augmentation performed only on training recordings.
 
+## Evaluation checks (package rerun)
+
+Each raga's 15 originals are consecutive ~20 s cuts of one studio performance (14 clips are exactly 20.0 s; the remainder clip is 22–30 s; Dwijavanthi and Thodi are cut differently). A random split therefore tests generalisation *within* a performance, not to new performances. Two checks on the training originals, cross-validation only (the sealed test set was not re-scored):
+
+| Config | Features | CV | Accuracy | Macro-F1 |
+|---|---|---|---|---|
+| `baseline` | all 69 | stratified | 0.878 ± 0.086 | 0.870 ± 0.095 |
+| `ablations/blocked` | all 69 | blocked | 0.856 ± 0.025 | 0.835 ± 0.054 |
+| `ablations/chroma_only` | chroma (24) | stratified | 0.841 ± 0.102 | 0.826 ± 0.098 |
+| `ablations/chroma_only_blocked` | chroma (24) | blocked | 0.818 ± 0.077 | 0.814 ± 0.068 |
+| `ablations/mfcc_only` | MFCC (40) | stratified | 0.711 ± 0.082 | 0.700 ± 0.099 |
+| `ablations/mfcc_only_blocked` | MFCC (40) | blocked | 0.679 ± 0.077 | 0.656 ± 0.095 |
+
+- **Blocked CV** holds out contiguous ranges of clip indices so validation clips are not time-neighbours of training clips. Accuracy drops only ~2 points, so adjacency leakage is small.
+- **Pitch-class content carries the signal**: chroma alone beats MFCC (timbre) alone by ~13 points, which argues against the model recognising recording conditions.
+- **What this cannot rule out**: with one performance per raga, a model could still key on that performance's tonic or habits. Only recordings from other performances can test that.
+- **CV noise**: the package sorts files, so its folds differ from the notebook's (0.878 vs 0.871; in the notebook's row order the package reproduces 0.871 ± 0.090 exactly). HistGradientBoosting ranges 0.68–0.78 across fold seeds alone, so model rankings closer than ~0.1 are not reliable from a single 5-fold run.
+- **Held-out test**: 30/33 correct is a 95% interval of roughly 0.76–0.97.
+
 ## Repository structure
 
 ```
 raga-multimodal-classifier/
-├── data/                      # dataset (git-ignored; download instructions below)
-├── notebooks/
-│   ├── 01_data_inventory.ipynb     # parsing, cleaning, leakage-safe split
-│   └── 02_features_baseline.ipynb  # feature extraction + classical ML baseline
-├── models/
-├── confusion_matrix_baseline.png
-└── README.md
+├── src/raga/
+│   ├── data.py        # filename parser, raga/emotion maps, dataset manifest
+│   ├── split.py       # frozen splits + stratified / blocked CV folds
+│   ├── features.py    # 69 aggregated MFCC / chroma / spectral features (cached)
+│   ├── models.py      # config name -> scikit-learn estimator
+│   ├── evaluate.py    # CV, bootstrap CIs, confusion matrices
+│   ├── train.py       # end-to-end run -> artifacts/runs/<name>/
+│   ├── predict.py     # RagaPredictor: audio file or array -> top-k ragas
+│   └── cli.py         # `raga manifest | train | predict`
+├── configs/           # one YAML per run; ablations/ holds the checks above
+├── splits/legacy_stratified.json   # the Phase 1 train/test split, frozen
+├── tests/             # synthetic-audio tests; no dataset needed
+├── 01_data_inventory.ipynb, 02_features_baseline.ipynb   # original exploration
+├── data/              # dataset (git-ignored)
+└── artifacts/         # models, metrics, feature cache (git-ignored)
 ```
 
 ## How to run
@@ -77,10 +104,19 @@ raga-multimodal-classifier/
 ```bash
 conda create -n raga-project python=3.10 -y
 conda activate raga-project
-conda install -c conda-forge librosa -y
-pip install pandas scikit-learn matplotlib seaborn jupyter
+pip install -e ".[dev]"
 
-# Download the RaagaDhvani dataset (CC BY-ND 4.0) into data/, then:
-jupyter notebook
-# run notebooks/01_data_inventory.ipynb, then notebooks/02_features_baseline.ipynb
+# Download the RaagaDhvani dataset (CC BY-ND 4.0), then point at its root:
+export RAGA_DATA_DIR="data/RaagaDhvani-A novel curated Augmented Carnatic mus/RaagaDhvani_Dataset_VidushiArchana"
+
+make test        # unit + end-to-end tests on synthetic audio
+make manifest    # parse all 613 filenames -> artifacts/manifest.csv
+make train       # baseline: CV, fit, save artifacts/runs/baseline/model.joblib
+make ablations   # comparison models + the evaluation checks above
+
+raga predict path/to/clip.wav --model artifacts/runs/baseline/model.joblib
 ```
+
+`make train` never touches the sealed test set. Scoring it requires
+`raga train --config configs/baseline.yaml --evaluate-test`, and every such run is
+appended to `artifacts/test_evaluations.jsonl` so repeated looks are on record.

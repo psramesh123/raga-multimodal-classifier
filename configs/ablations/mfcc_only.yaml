@@ -1,0 +1,9 @@
+# Timbre only. If this matches the full model, it is recognising recordings, not ragas.
+name: mfcc_only
+split: splits/legacy_stratified.json
+features:
+  groups: [mfcc]
+model:
+  name: logreg
+eval:
+  cv_strategy: stratified
