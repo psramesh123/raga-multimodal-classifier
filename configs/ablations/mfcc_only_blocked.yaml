@@ -1,0 +1,9 @@
+# Timbre only, blocked CV.
+name: mfcc_only_blocked
+split: splits/legacy_stratified.json
+features:
+  groups: [mfcc]
+model:
+  name: logreg
+eval:
+  cv_strategy: blocked

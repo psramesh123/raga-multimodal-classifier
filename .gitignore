@@ -18,3 +18,17 @@ __pycache__/
 models/*.pkl
 models/*.pt
 models/*.joblib
+
+# Small committed fixtures (the *.csv rule above would hide them)
+!tests/fixtures/*.csv
+
+# Run outputs: models, metrics, feature cache, manifest
+artifacts/
+
+# Large intermediate arrays
+*.npz
+
+# Tooling
+*.egg-info/
+.pytest_cache/
+.ruff_cache/

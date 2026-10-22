@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "raga"
+version = "0.1.0"
+description = "Carnatic raga recognition from raw audio"
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "librosa==0.10.1",
+    "numpy==1.26.4",
+    "pandas==2.3.3",
+    "scikit-learn==1.7.2",
+    "scipy==1.15.3",
+    "soundfile>=0.12",
+    "joblib>=1.3",
+    "pyyaml>=6.0",
+    "matplotlib>=3.8",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[project.scripts]
+raga = "raga.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["data: needs the RaagaDhvani audio (skipped when RAGA_DATA_DIR is unset)"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = ["*.ipynb"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
