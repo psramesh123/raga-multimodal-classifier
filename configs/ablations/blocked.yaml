@@ -1,0 +1,9 @@
+# Same model, but CV holds out contiguous clip ranges per raga (see split.cv_folds).
+name: blocked
+split: splits/legacy_stratified.json
+features:
+  groups: [mfcc, chroma, spectral]
+model:
+  name: logreg
+eval:
+  cv_strategy: blocked

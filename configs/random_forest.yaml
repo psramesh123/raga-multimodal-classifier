@@ -1,0 +1,5 @@
+# Phase 1 comparison model.
+name: random_forest
+split: splits/legacy_stratified.json
+model:
+  name: random_forest

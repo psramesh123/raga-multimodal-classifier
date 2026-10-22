@@ -1,0 +1,9 @@
+# Pitch-class content only (not yet tonic-normalised).
+name: chroma_only
+split: splits/legacy_stratified.json
+features:
+  groups: [chroma]
+model:
+  name: logreg
+eval:
+  cv_strategy: stratified
